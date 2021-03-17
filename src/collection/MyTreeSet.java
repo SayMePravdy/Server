@@ -54,17 +54,12 @@ public class MyTreeSet {
 
     public boolean remove(int id) {
         Ticket ticket = null;
-        for (Ticket t : myTreeSet) {
-            if (t.getId() == id) {
-                ticket = t;
-            }
-        }
-        if (ticket == null) {
+        int size = size();
+        myTreeSet.removeIf(myTreeSet -> myTreeSet.getId() == id);
+        if (size - size() == 0) {
             return false;
-        } else {
-            myTreeSet.remove(ticket);
-            return true;
         }
+        return true;
     }
 
     /**
@@ -81,10 +76,8 @@ public class MyTreeSet {
         if (myTreeSet.isEmpty())
             return true;
 
-        if (ticket.compareTo(myTreeSet.last()) > 0) {
-            return true;
-        }
-        return false;
+        return myTreeSet.stream().max(Ticket::compareTo).get().compareTo(ticket) < 0;
+
     }
 
 
@@ -92,7 +85,9 @@ public class MyTreeSet {
      * УДаление всех элементов коллекции больших заднного
      */
     public void removeGreater(Ticket ticket) {
-        myTreeSet.removeAll(myTreeSet.tailSet(ticket, true));
+
+        //myTreeSet.removeAll(myTreeSet.tailSet(ticket, true));
+        myTreeSet.removeIf(ticket1 -> ticket1.compareTo(ticket) > 0);
     }
 
 
@@ -102,11 +97,7 @@ public class MyTreeSet {
     public boolean isMin(Ticket ticket) {
         if (myTreeSet.isEmpty())
             return true;
-
-        if (ticket.compareTo(myTreeSet.first()) < 0) {
-            return true;
-        }
-        return false;
+        return myTreeSet.stream().max(Ticket::compareTo).get().compareTo(ticket) > 0;
     }
 
 
@@ -117,27 +108,16 @@ public class MyTreeSet {
     /**
      * Нахождение суммы полей discount
      */
-    public int sumDiscount() {
-        int sum = 0;
-        for (Ticket t : myTreeSet) {
-            sum += t.getDiscount();
-        }
-        return sum;
+    public long sumDiscount() {
+        return myTreeSet.stream().mapToLong(Ticket::getDiscount).sum();
     }
 
     /**
      * Нахождение билета с максимальным комментарием
      */
     public Ticket maxComment() {
-        String max = "";
-        Ticket ticket = null;
-        for (Ticket t : myTreeSet) {
-            if (t.getComment().compareTo(max) > 0) {
-                max = t.getComment();
-                ticket = t;
-            }
-        }
-        return ticket;
+
+        return myTreeSet.stream().max(Comparator.comparing(Ticket::getComment)).orElse(null);
     }
 
     /**
