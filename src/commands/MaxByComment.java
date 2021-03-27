@@ -14,11 +14,11 @@ public class MaxByComment extends AbstractCommand {
     }
 
     @Override
-    public void execute(List<Object> arguments) {
+    public String execute(List<Object> arguments) {
         try {
-            Server.sendMessage(myTreeSet.maxComment().toString());
+            return myTreeSet.maxComment().toString();
         } catch (NullPointerException e) {
-            Server.sendMessage("Collection is empty");
+            return "Collection is empty";
         }
 
     }

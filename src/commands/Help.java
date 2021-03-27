@@ -28,7 +28,7 @@ public class Help extends AbstractCommand {
     }
 
     @Override
-    public void execute(List<Object> arguments) {
-        Server.sendMessage(HELP);
+    public String execute(List<Object> arguments) {
+        return HELP;
     }
 }

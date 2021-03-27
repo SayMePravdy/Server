@@ -14,7 +14,7 @@ public class Info extends AbstractCommand{
     }
 
     @Override
-    public void execute(List<Object> arguments) {
-        Server.sendMessage(myTreeSet.showInfo());
+    public String execute(List<Object> arguments) {
+        return myTreeSet.showInfo();
     }
 }

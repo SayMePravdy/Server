@@ -11,8 +11,7 @@ public class Exit extends AbstractCommand {
     }
 
     @Override
-    public void execute(List<Object> arguments) {
-        Server.sendMessage("exit");
-        Server.clientExit();
+    public String execute(List<Object> arguments) {
+        return "exit";
     }
 }

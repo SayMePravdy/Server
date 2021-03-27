@@ -16,23 +16,23 @@ public class Update extends AbstractCommand{
     }
 
     @Override
-    public void execute(List<Object> arguments) {
+    public String execute(List<Object> arguments) {
         int id = (int) arguments.get(0);
         if (id != -1) {
             if (!myTreeSet.remove(id)) {
-                Server.sendMessage("Element with your id not found");
+                return "Element with your id not found";
             } else {
                 Ticket ticket = (Ticket) arguments.get(1);
                 if (ticket != null){
                     myTreeSet.add(ticket);
-                    Server.sendMessage("Ticket updated");
+                    return "Ticket updated";
                 }
                 else {
-                    Server.sendMessage("Incorrect data in script");
+                    return "Incorrect data in script";
                 }
             }
         } else {
-            Server.sendMessage("Incorrect id");
+            return "Incorrect id";
         }
     }
 }

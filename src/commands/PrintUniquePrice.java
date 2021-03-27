@@ -15,7 +15,7 @@ public class PrintUniquePrice extends AbstractCommand {
     }
 
     @Override
-    public void execute(List<Object> arguments) {
-        Server.sendMessage(myTreeSet.uniquePrices().toString());
+    public String execute(List<Object> arguments) {
+        return myTreeSet.uniquePrices().toString();
     }
 }

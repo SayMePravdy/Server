@@ -16,17 +16,17 @@ public class AddIfMin extends AbstractCommand {
     }
 
     @Override
-    public void execute(List<Object> arguments) {
+    public String execute(List<Object> arguments) {
         Ticket ticket = (Ticket) arguments.get(0);
         if (ticket != null) {
             if (myTreeSet.isMin(ticket)) {
                 myTreeSet.add(ticket);
-                Server.sendMessage("Ticket added");
+                return "Ticket added";
             } else {
-                Server.sendMessage("Element isn't maximal");
+                return "Element isn't maximal";
             }
         } else {
-            Server.sendMessage("Incorrect data in script");
+            return "Incorrect data in script";
         }
     }
 }

@@ -15,13 +15,13 @@ public class RemoveGreater extends AbstractCommand {
     }
 
     @Override
-    public void execute(List<Object> arguments) {
+    public String execute(List<Object> arguments) {
         Ticket ticket = (Ticket) arguments.get(0);
         if (ticket != null) {
             myTreeSet.removeGreater(ticket);
-            Server.sendMessage("Tickets deleted");
+            return "Tickets deleted";
         } else {
-            Server.sendMessage("Incorrect data in script");
+            return "Incorrect data in script";
         }
     }
 }

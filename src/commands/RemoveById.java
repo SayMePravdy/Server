@@ -15,16 +15,16 @@ public class RemoveById extends AbstractCommand {
     }
 
     @Override
-    public void execute(List<Object> arguments) {
+    public String execute(List<Object> arguments) {
         int id = (int) arguments.get(0);
         if (id != -1) {
             if (!myTreeSet.remove(id)) {
-                Server.sendMessage("Element with your id not found");
+                return "Element with your id not found";
             } else {
-                Server.sendMessage("Ticket deleted");
+                return "Ticket deleted";
             }
         } else {
-            Server.sendMessage("Incorrect id");
+            return "Incorrect id";
         }
     }
 }

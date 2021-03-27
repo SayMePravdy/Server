@@ -18,13 +18,13 @@ public class Add extends AbstractCommand {
     }
 
     @Override
-    public void execute(List<Object> arguments) {
+    public String execute(List<Object> arguments) {
         Ticket ticket = (Ticket)arguments.get(0);
         if (ticket != null) {
             myTreeSet.add(ticket);
-            Server.sendMessage("Ticket added");
+           return "Ticket added";
         } else {
-            Server.sendMessage("Incorrect data in file");
+            return "Incorrect data in file";
         }
     }
 }

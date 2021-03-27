@@ -14,7 +14,7 @@ public class SumOfDiscount extends AbstractCommand {
     }
 
     @Override
-    public void execute(List<Object> arguments) {
-        Server.sendMessage("" + myTreeSet.sumDiscount());
+    public String execute(List<Object> arguments) {
+        return "" + myTreeSet.sumDiscount();
     }
 }

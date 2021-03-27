@@ -14,8 +14,8 @@ public class Clear extends AbstractCommand{
     }
 
     @Override
-    public void execute(List<Object> arguments) {
+    public String execute(List<Object> arguments) {
         myTreeSet.clear();
-        Server.sendMessage("Collection is empty");
+        return "Collection is empty";
     }
 }
