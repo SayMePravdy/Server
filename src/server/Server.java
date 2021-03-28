@@ -8,10 +8,11 @@ import java.io.*;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class Server {
-    private static ByteBuffer byteBuffer = ByteBuffer.allocate(16384);
+    //private static ByteBuffer byteBuffer = ByteBuffer.allocate(16384);
     private static ServerSocketChannel serverSocketChannel;
     private static Selector selector;
     private static int PORT = 3345;
@@ -25,61 +26,22 @@ public class Server {
             serverSocketChannel.configureBlocking(false);
             serverSocketChannel.bind(new InetSocketAddress(PORT));
             serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
-
-            //for (int i = 0; i < cntReconnect; i++) {
-                run();
-               // System.out.println("Connection is closed");
-            //}
+            run();
         } catch (IOException e) {
-            //e.printStackTrace();
             System.out.println("Some problems");
         } finally {
             selector.close();
         }
     }
 
-    private static void accept(SelectionKey key) throws IOException {
-        //ServerSocketChannel channel = (ServerSocketChannel) key.channel();
-        SocketChannel client = serverSocketChannel.accept();
-        client.configureBlocking(false);
-        client.register(key.selector(), SelectionKey.OP_READ);
-//        Socket client = serverSocketChannel.socket().accept();
-//        SocketChannel channel = client.getChannel();
-//        channel.configureBlocking(false);
-//        channel.register(selector, SelectionKey.OP_READ);
-    }
-
-    private static Data read(SelectionKey key) throws IOException, ClassNotFoundException {
-        SocketChannel channel = (SocketChannel) key.channel();
-        channel.read(byteBuffer);
-        byteBuffer.flip();
-        Data data = deserialize();
-        channel.configureBlocking(false);
-        channel.register(key.selector(), SelectionKey.OP_WRITE);
-        byteBuffer.clear();
-        return data;
-    }
-
-    private static void write(SelectionKey key, String ans) throws IOException {
-        SocketChannel channel = (SocketChannel) key.channel();
-        byteBuffer.put(serialize(ans));
-        channel.write(byteBuffer);
-        byteBuffer.flip();
-        channel.configureBlocking(false);
-        channel.register(key.selector(), SelectionKey.OP_READ);
-        byteBuffer.clear();
-    }
-
-
-    private static void run() throws IOException, ClassNotFoundException {
+    private static void run() throws IOException {
         MyTreeSet treeSet = new MyTreeSet();
-        NavigableSet<File> scripts = new TreeSet<>();
         String ans = "";
+        ServerInput input;
 
         while (true) {
             int count = selector.select();
             if (count == 0) {
-//                //System.out.println("cnt = 0");
                 continue;
             }
             Set keySet = selector.selectedKeys();
@@ -87,43 +49,103 @@ public class Server {
             while (it.hasNext()) {
                 SelectionKey key = (SelectionKey) it.next();
                 it.remove();
+                ByteBuffer buffer = ByteBuffer.allocate(65536);
                 if (key.isAcceptable()) {
-                    accept(key);
+                    File file = accept(key, buffer);
+                    input = new ServerInput(treeSet, file);
+                    input.start();
                     break;
                 }
                 if (key.isReadable()) {
-                    Data data = read(key);
+                    Data data = read(key, buffer);
                     try {
-                        Command command = searchCommand(data.getCommandName(), treeSet, scripts);
+                        Command command = searchCommand(data.getCommandName(), treeSet);
                         ans = command.execute(data.getArguments());
-                        //byteBuffer.flip();
-                        //byteBuffer.put(serialize(ans));
-                        //byteBuffer.flip();
                     } catch (NullPointerException e) {
-                        //System.out.println("Connection is closed");
                     }
                     break;
                 }
                 if (key.isWritable()) {
-                    write(key, ans);
+                    write(key, ans, buffer);
                     break;
                 }
             }
         }
     }
 
+    private static File accept(SelectionKey key, ByteBuffer byteBuffer)  {
+        SocketChannel client;
+        try {
+            client = serverSocketChannel.accept();
+            client.read(byteBuffer);
+            client.configureBlocking(false);
+            client.register(key.selector(), SelectionKey.OP_READ);
+            System.out.println("Client connected");
+            File file = deserialize(byteBuffer);
+            return file;
+        } catch (IOException e) {
+            System.out.println("Client go out");
+        } catch (ClassNotFoundException e) {
+        }
+        return null;
+    }
 
-    private static Data deserialize() throws IOException, ClassNotFoundException {
+    private static Data read(SelectionKey key, ByteBuffer byteBuffer)  {
+        SocketChannel channel = (SocketChannel) key.channel();
+        try {
+            channel.read(byteBuffer);
+            Data data = deserialize(byteBuffer);
+            channel.configureBlocking(false);
+            channel.register(key.selector(), SelectionKey.OP_WRITE);
+            byteBuffer.clear();
+            return data;
+        } catch (IOException | ClassNotFoundException e) {
+            try {
+                channel.close();
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
+            System.out.println("Client go out");
+        }
+        return null;
+    }
+
+    private static void write(SelectionKey key, String ans, ByteBuffer byteBuffer) {
+        SocketChannel channel = (SocketChannel) key.channel();
+        byteBuffer.put(serialize(ans));
+        byteBuffer.flip();
+        try {
+            channel.write(byteBuffer);
+            channel.configureBlocking(false);
+            channel.register(key.selector(), SelectionKey.OP_READ);
+            byteBuffer.clear();
+        } catch (IOException e) {
+            try {
+                channel.close();
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
+            System.out.println("Client go out");
+        }
+    }
+
+
+    private static <T> T deserialize(ByteBuffer byteBuffer) throws IOException, ClassNotFoundException {
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(byteBuffer.array());
         ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream);
-        Data data = (Data) objectInputStream.readObject();
+        T data;
+        try {
+            data = (T) objectInputStream.readObject();
+        } catch (IOException e) {
+            data = null;
+        }
         byteArrayInputStream.close();
         objectInputStream.close();
         byteBuffer.clear();
         return data;
     }
 
-    public static Command searchCommand(String command, MyTreeSet treeSet, NavigableSet<File> scripts) {
+    public static Command searchCommand(String command, MyTreeSet treeSet) {
         switch (command) {
             case "help":
                 return new Help("help");
@@ -164,17 +186,15 @@ public class Server {
     }
 
 
-    private static byte[] serialize(String message) throws IOException {
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
-        objectOutputStream.writeObject(message);
-        //dataOutputStream.writeUTF(message);
-        byte[] buffer = byteArrayOutputStream.toByteArray();
-        objectOutputStream.flush();
-        byteArrayOutputStream.flush();
-        byteArrayOutputStream.close();
-        objectOutputStream.close();
-        return buffer;
+    private static byte[] serialize(String message) {
+        try(ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream)){
+            objectOutputStream.writeObject(message);
+            return byteArrayOutputStream.toByteArray();
+        } catch (IOException e) {
+            System.out.println("Serialize problem");
+        }
+        return null;
     }
 
 
