@@ -17,6 +17,7 @@ public class Server {
     private static Selector selector;
     private static int PORT = 3345;
     private final static int cntReconnect = 100;
+    private static boolean firstAccept = true;
 
     public static void main(String[] args) throws Exception {
 
@@ -37,8 +38,8 @@ public class Server {
     private static void run() throws IOException {
         MyTreeSet treeSet = new MyTreeSet();
         String ans = "";
-        ServerInput input;
-        File file;
+        //ServerInput input;
+        //File file;
         boolean firstAccept = true;
 
         while (true) {
@@ -53,27 +54,7 @@ public class Server {
                 it.remove();
                 ByteBuffer buffer = ByteBuffer.allocate(65536);
                 if (key.isAcceptable()) {
-                    file = accept(key, buffer);
-                    if (file != null) {
-                        if (firstAccept) {
-                            input = new ServerInput(treeSet, file);
-                            input.start();
-                            File finalFile = file;
-                            Runtime.getRuntime().addShutdownHook(new Thread() {
-                                @Override
-                                public void run() {
-                                    try (FileWriter writer = new FileWriter(finalFile)) {
-                                        treeSet.save(writer);
-                                    } catch (IOException e) {
-                                        System.out.println("File not found");
-                                    }
-
-                                }
-                            });
-                            firstAccept = false;
-                        }
-
-                    }
+                    accept(key, buffer, treeSet);
                     break;
                 }
                 if (key.isReadable()) {
@@ -93,7 +74,30 @@ public class Server {
         }
     }
 
-    private static File accept(SelectionKey key, ByteBuffer byteBuffer)  {
+    private static String firstAccept(File file, MyTreeSet treeSet) {
+        ServerInput input = new ServerInput(treeSet, file);
+        input.start();
+        //File finalFile = file;
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                try (FileWriter writer = new FileWriter(file)) {
+                    treeSet.save(writer);
+                    System.out.println("Collection is saved to " + file.getAbsolutePath());
+                } catch (IOException e) {
+                    System.out.println("File not found");
+                }
+
+            }
+        });
+        Command command = new AddFromCsv("addFromCsv", treeSet, file);
+        return command.execute(null);
+        //ByteBuffer buffer = ByteBuffer.allocate(65536);
+
+        //treeSet.addTicketsFromCsv(file);
+    }
+
+    private static File accept(SelectionKey key, ByteBuffer byteBuffer, MyTreeSet treeSet)  {
         SocketChannel client;
         try {
             client = serverSocketChannel.accept();
@@ -102,7 +106,16 @@ public class Server {
             client.register(key.selector(), SelectionKey.OP_READ);
             System.out.println("Client connected");
             File file = deserialize(byteBuffer);
-            return file;
+            byteBuffer.clear();
+            if (file != null) {
+                if (firstAccept) {
+                    byteBuffer.put((serialize(firstAccept(file, treeSet))));
+                    byteBuffer.flip();
+                    client.write(byteBuffer);
+                    firstAccept = false;
+                }
+
+            }
         } catch (IOException e) {
             System.out.println("Client go out");
         } catch (ClassNotFoundException e) {
