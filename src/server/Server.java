@@ -38,6 +38,8 @@ public class Server {
         MyTreeSet treeSet = new MyTreeSet();
         String ans = "";
         ServerInput input;
+        File file;
+        boolean firstAccept = true;
 
         while (true) {
             int count = selector.select();
@@ -51,9 +53,27 @@ public class Server {
                 it.remove();
                 ByteBuffer buffer = ByteBuffer.allocate(65536);
                 if (key.isAcceptable()) {
-                    File file = accept(key, buffer);
-                    input = new ServerInput(treeSet, file);
-                    input.start();
+                    file = accept(key, buffer);
+                    if (file != null) {
+                        if (firstAccept) {
+                            input = new ServerInput(treeSet, file);
+                            input.start();
+                            File finalFile = file;
+                            Runtime.getRuntime().addShutdownHook(new Thread() {
+                                @Override
+                                public void run() {
+                                    try (FileWriter writer = new FileWriter(finalFile)) {
+                                        treeSet.save(writer);
+                                    } catch (IOException e) {
+                                        System.out.println("File not found");
+                                    }
+
+                                }
+                            });
+                            firstAccept = false;
+                        }
+
+                    }
                     break;
                 }
                 if (key.isReadable()) {

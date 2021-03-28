@@ -31,6 +31,8 @@ public class ServerInput extends Thread{
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+            } else {
+                System.out.println("Command \"" + command + "\" doesn't exists");
             }
         }
     }
