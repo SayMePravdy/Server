@@ -15,9 +15,10 @@ public class Server {
     //private static ByteBuffer byteBuffer = ByteBuffer.allocate(16384);
     private static ServerSocketChannel serverSocketChannel;
     private static Selector selector;
-    private static int PORT = 3345;
-    private final static int cntReconnect = 100;
+    private static int PORT = 13345;
+    //private final static int cntReconnect = 100;
     private static boolean firstAccept = true;
+    private static NavigableSet<File> files = new TreeSet<>();
 
     public static void main(String[] args) throws Exception {
 
@@ -40,7 +41,6 @@ public class Server {
         String ans = "";
         //ServerInput input;
         //File file;
-        boolean firstAccept = true;
 
         while (true) {
             int count = selector.select();
@@ -74,7 +74,16 @@ public class Server {
         }
     }
 
-    private static String firstAccept(File file, MyTreeSet treeSet) {
+    private static String firstClientAccept(File file, MyTreeSet treeSet) {
+        if (files.contains(file)) {
+            return "This file has already been added";
+        }
+        files.add(file);
+        Command command = new AddFromCsv("addFromCsv", treeSet, file);
+        return command.execute(null);
+    }
+
+    private static void firstAccept(File file, MyTreeSet treeSet) {
         ServerInput input = new ServerInput(treeSet, file);
         input.start();
         //File finalFile = file;
@@ -90,14 +99,9 @@ public class Server {
 
             }
         });
-        Command command = new AddFromCsv("addFromCsv", treeSet, file);
-        return command.execute(null);
-        //ByteBuffer buffer = ByteBuffer.allocate(65536);
-
-        //treeSet.addTicketsFromCsv(file);
     }
 
-    private static File accept(SelectionKey key, ByteBuffer byteBuffer, MyTreeSet treeSet)  {
+    private static void accept(SelectionKey key, ByteBuffer byteBuffer, MyTreeSet treeSet)  {
         SocketChannel client;
         try {
             client = serverSocketChannel.accept();
@@ -108,19 +112,19 @@ public class Server {
             File file = deserialize(byteBuffer);
             byteBuffer.clear();
             if (file != null) {
+                byteBuffer.put((serialize(firstClientAccept(file, treeSet))));
+                byteBuffer.flip();
+                client.write(byteBuffer);
                 if (firstAccept) {
-                    byteBuffer.put((serialize(firstAccept(file, treeSet))));
-                    byteBuffer.flip();
-                    client.write(byteBuffer);
+                    firstAccept(file, treeSet);
                     firstAccept = false;
                 }
-
             }
         } catch (IOException e) {
             System.out.println("Client go out");
         } catch (ClassNotFoundException e) {
         }
-        return null;
+        //return null;
     }
 
     private static Data read(SelectionKey key, ByteBuffer byteBuffer)  {

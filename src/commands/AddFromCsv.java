@@ -12,9 +12,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class AddFromCsv extends AbstractCommand {
     private final static int MIN = 0;
@@ -33,6 +31,7 @@ public class AddFromCsv extends AbstractCommand {
 
     private MyTreeSet treeSet;
     private File file;
+
 
     public AddFromCsv(String name, MyTreeSet treeSet, File file) {
         super(name);
@@ -73,6 +72,9 @@ public class AddFromCsv extends AbstractCommand {
         } catch (FileNotFoundException e) {
             //e.printStackTrace();
             return "File not found";
+        } finally {
+            Add.setFirstId(FIRST_TICKET_ID);
+            Add.setFirstEventId(FIRST_EVENT_ID);
         }
     }
 

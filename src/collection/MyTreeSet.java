@@ -154,41 +154,6 @@ public class MyTreeSet {
      * Нахождение уникальных полей price
      */
     public Set<Float> uniquePrices() {
-//        float prevPrice = 0f;
-//        float price = 0f;
-//        float ppPrice = 0f;
-//        Set<Float> uniquePrices = new TreeSet<>();
-//        if (myTreeSet.size() == 1) {
-//            uniquePrices.add(myTreeSet.first().getPrice());
-//            return uniquePrices;
-//        }
-//        boolean first = true, second = true;
-//        for (Ticket t : myTreeSet) {
-//            if (first) {
-//                first = false;
-//                price = t.getPrice();
-//            } else {
-//                if (second) {
-//                    second = false;
-//                    prevPrice = price;
-//                    price = t.getPrice();
-//                    if (prevPrice != price) {
-//                        uniquePrices.add(prevPrice);
-//                    }
-//                } else {
-//                    ppPrice = prevPrice;
-//                    prevPrice = price;
-//                    price = t.getPrice();
-//                    if (prevPrice != ppPrice && prevPrice != price) {
-//                        uniquePrices.add(prevPrice);
-//                    }
-//                }
-//            }
-//        }
-//        if (price != prevPrice) {
-//            uniquePrices.add(price);
-//        }
-//        return uniquePrices;
         return myTreeSet.stream().map(Ticket::getPrice).collect(Collectors.toSet());
     }
 
