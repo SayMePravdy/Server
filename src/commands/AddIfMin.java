@@ -1,25 +1,30 @@
 package commands;
 
 
+import dao.TicketDao;
 import server.Server;
 import collection.MyTreeSet;
 import data.Ticket;
 
+import java.sql.SQLException;
 import java.util.List;
 
 public class AddIfMin extends AbstractCommand {
     private MyTreeSet myTreeSet;
+    private int userId;
 
-    public AddIfMin(String name, MyTreeSet myTreeSet) {
-        super(name);
+    public AddIfMin(String name, MyTreeSet myTreeSet, TicketDao ticketDao, int userId) {
+        super(name, ticketDao);
+        this.userId = userId;
         this.myTreeSet = myTreeSet;
     }
 
     @Override
-    public String execute(List<Object> arguments) {
+    public String execute(List<Object> arguments) throws SQLException {
         Ticket ticket = (Ticket) arguments.get(0);
         if (ticket != null) {
             if (myTreeSet.isMin(ticket)) {
+                ticket.setId(ticketDao.insertTicket(ticket, userId));
                 myTreeSet.add(ticket);
                 return "Ticket added";
             } else {

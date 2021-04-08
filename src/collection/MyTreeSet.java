@@ -25,7 +25,7 @@ public class MyTreeSet {
      * Конструктор, в котором указываем компораторы
      */
     public MyTreeSet() {
-        Comparator<Ticket> comp = new TicketPriceComparator().thenComparing(new TicketIdComparator());
+        Comparator<Ticket> comp = new TicketPriceComparator();
         myTreeSet = new TreeSet<>(comp);
     }
 
@@ -54,6 +54,10 @@ public class MyTreeSet {
     /**
      * Удаление элемента коллекции по его id
      */
+
+    public boolean findId(int id) {
+        return myTreeSet.stream().map(Ticket::getId).filter((w) -> w == id).count() == 1;
+    }
 
     public boolean remove(int id) {
         Ticket ticket = null;
@@ -170,6 +174,10 @@ public class MyTreeSet {
      */
     public int size() {
         return myTreeSet.size();
+    }
+
+    public void addAll(Set<Ticket> tickets) {
+        myTreeSet.addAll(tickets);
     }
 
 }

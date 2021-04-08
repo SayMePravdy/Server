@@ -20,6 +20,15 @@ public class Ticket implements Comparable<Ticket>, Serializable {
     private String comment; //Строка не может быть пустой, Поле не может быть null
 
     private TicketType type; //Поле может быть null
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Ticket ticket = (Ticket) o;
+        return id == ticket.id && Float.compare(ticket.price, price) == 0 && discount == ticket.discount && Objects.equals(name, ticket.name) && Objects.equals(coordinates, ticket.coordinates) && Objects.equals(comment, ticket.comment) && type == ticket.type && Objects.equals(event, ticket.event);
+    }
+
     private Event event; //Поле может быть null
 
     public Ticket(int id, String name, Coordinates coordinates, ZonedDateTime creationDate, float price, long discount, String comment, TicketType type, Event event) {
@@ -151,6 +160,6 @@ public class Ticket implements Comparable<Ticket>, Serializable {
             return -1;
         }
 
-        return this.getId() - o.getId();
+        return 0;
     }
 }

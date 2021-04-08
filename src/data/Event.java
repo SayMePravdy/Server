@@ -7,6 +7,7 @@ public class Event implements Serializable {
     private String name; //Поле не может быть null, Строка не может быть пустой
     private int minAge;
     private Integer ticketsCount; //Поле может быть null, Значение поля должно быть больше 0
+    private static final long serialVersionUID = 1L;
 
     public Event(Integer id, String name, int minAge, Integer ticketsCount) {
         this.id = id;
@@ -31,5 +32,21 @@ public class Event implements Serializable {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getMinAge() {
+        return minAge;
+    }
+
+    public Integer getTicketsCount() {
+        return ticketsCount;
     }
 }
