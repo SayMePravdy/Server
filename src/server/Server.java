@@ -24,8 +24,20 @@ public class Server {
     private static int PORT = 13345;
     private static TicketDao ticketDao;
     private static final String DB_URL = "jdbc:postgresql://localhost:9999/studs";
-    private static final String USER = "s311723";
-    private static final String PASS = "uep250";
+    /*
+    для хелиоса
+    private static final String DB_URL = "jdbc:postgresql://pg:5432/studs";
+     */
+    private static final String USER;
+    private static final String PASS;
+
+    static {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Enter login");
+        USER = scanner.nextLine();
+        System.out.println("Enter password");
+        PASS = scanner.nextLine();
+    }
 
     public static void main(String[] args) throws Exception {
 
@@ -35,8 +47,14 @@ public class Server {
             serverSocketChannel.configureBlocking(false);
             serverSocketChannel.bind(new InetSocketAddress(PORT));
             serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
-            ticketDao = new TicketDao(DB_URL, USER, PASS);
-            run();
+            try {
+                ticketDao = new TicketDao(DB_URL, USER, PASS);
+                System.out.println("Server connected to database");
+                run();
+            } catch (SQLException e) {
+                System.out.println("Connection to database failed");
+            }
+
         } catch (IOException e) {
             System.out.println("Some problems");
         } finally {
@@ -75,17 +93,26 @@ public class Server {
                 }
                 if (key.isReadable()) {
                     Data data = read(key, buffer);
-                    try {
-                        Integer userId = ticketDao.findUser(data.getLogin(), data.getPassword());
-                        if (userId != null || data.getCommandName().equals("register")) {
-                            Command command = searchCommand(data.getCommandName(), treeSet, userId);
-                            ans = command.execute(data.getArguments());
-                        } else {
-                            ans = "Can't found this user";
-                        }
+                    if (data != null) {
+                        try {
+                            Integer userId = ticketDao.findUser(data.getLogin(), data.getPassword());
+                            if (userId != null || data.getCommandName().equals("register")) {
+                                Command command = searchCommand(data.getCommandName(), treeSet, userId);
+                                ans = command.execute(data.getArguments());
+                            } else {
+                                ans = "Can't found this user";
+                            }
 
-                    } catch (NullPointerException | SQLException e) {
-                        ans = "Your data is too long";
+                        } catch (SQLException e) {
+                            if (e.getMessage().contains("too long")) {
+                                ans = "Your data is too long";
+                            } else {
+                                if (e.getMessage().contains("duplicate")) {
+                                    ans = "User with this login already exists";
+                                }
+                            }
+
+                        }
                     }
                     break;
                 }
@@ -102,12 +129,9 @@ public class Server {
         SocketChannel client;
         try {
             client = serverSocketChannel.accept();
-            //client.read(byteBuffer);
             client.configureBlocking(false);
             client.register(key.selector(), SelectionKey.OP_READ);
             System.out.println("Client connected");
-            //File file = deserialize(byteBuffer);
-            //byteBuffer.clear();
 
         } catch (IOException e) {
             System.out.println("Client go out");

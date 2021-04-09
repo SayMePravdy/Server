@@ -27,6 +27,7 @@ public class MyTreeSet {
     public MyTreeSet() {
         Comparator<Ticket> comp = new TicketPriceComparator();
         myTreeSet = new TreeSet<>(comp);
+        date = new Date();
     }
 
     /**
@@ -37,9 +38,6 @@ public class MyTreeSet {
      * Добавление элемента в коллекцию
      */
     public void add(Ticket ticket) {
-        if (date == null) {
-            date = new Date();
-        }
         myTreeSet.add(ticket);
     }
 

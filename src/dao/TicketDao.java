@@ -19,7 +19,7 @@ public class TicketDao {
     private final String PASS;
     private Connection connection;
 
-    public TicketDao(String DB_URL, String USER, String PASS) {
+    public TicketDao(String DB_URL, String USER, String PASS) throws SQLException{
         this.DB_URL = DB_URL;
         this.USER = USER;
         this.PASS = PASS;
@@ -33,14 +33,11 @@ public class TicketDao {
 
         System.out.println("PostgreSQL JDBC Driver successfully connected");
 
-        try {
-            connection = DriverManager
+
+        connection = DriverManager
                     .getConnection(DB_URL, USER, PASS);
 
-        } catch (SQLException e) {
-            System.out.println("Connection Failed");
-            e.printStackTrace();
-        }
+
     }
 
     private Ticket getTicket(ResultSet resultSet) throws SQLException {
