@@ -8,6 +8,8 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 /**
@@ -20,7 +22,7 @@ public class MyTreeSet {
      */
     private NavigableSet<Ticket> myTreeSet;
     private Date date = null;
-
+    private final Lock lock = new ReentrantLock();
     /**
      * Конструктор, в котором указываем компораторы
      */
@@ -38,7 +40,12 @@ public class MyTreeSet {
      * Добавление элемента в коллекцию
      */
     public void add(Ticket ticket) {
-        myTreeSet.add(ticket);
+        lock.lock();
+        try {
+            myTreeSet.add(ticket);
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -46,7 +53,12 @@ public class MyTreeSet {
      */
 
     public void remove(Ticket ticket) {
-        myTreeSet.remove(ticket);
+        lock.lock();
+        try{
+            myTreeSet.remove(ticket);
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -54,55 +66,73 @@ public class MyTreeSet {
      */
 
     public boolean findId(int id) {
-        return myTreeSet.stream().map(Ticket::getId).filter((w) -> w == id).count() == 1;
+        lock.lock();
+        try{
+            return myTreeSet.stream().map(Ticket::getId).filter((w) -> w == id).count() == 1;
+        } finally {
+            lock.unlock();
+        }
     }
 
     public boolean remove(int id) {
-        Ticket ticket = null;
-        int size = size();
-        myTreeSet.removeIf(myTreeSet -> myTreeSet.getId() == id);
-        if (size - size() == 0) {
-            return false;
+        lock.lock();
+        try{
+            int size = size();
+            myTreeSet.removeIf(myTreeSet -> myTreeSet.getId() == id);
+            if (size - size() == 0) {
+                return false;
+            }
+            return true;
+        } finally {
+            lock.unlock();
         }
-        return true;
     }
 
-    /**
-     * Очистка коллекции
-     */
-    public void clear() {
-        myTreeSet.clear();
-    }
+//    /**
+//     * Очистка коллекции
+//     */
+//    public void clear() {
+//        myTreeSet.clear();
+//    }
 
     /**
      * Проверка является ли билет максимальным в коллекции
      */
     public boolean isMax(Ticket ticket) {
-        if (myTreeSet.isEmpty())
-            return true;
+        lock.lock();
+        try {
+            if (myTreeSet.isEmpty())
+                return true;
 
-        return myTreeSet.stream().max(Ticket::compareTo).get().compareTo(ticket) < 0;
-
+            return myTreeSet.stream().max(Ticket::compareTo).get().compareTo(ticket) < 0;
+        } finally {
+            lock.unlock();
+        }
     }
 
 
-    /**
-     * УДаление всех элементов коллекции больших заднного
-     */
-    public void removeGreater(Ticket ticket) {
-
-        //myTreeSet.removeAll(myTreeSet.tailSet(ticket, true));
-        myTreeSet.removeIf(ticket1 -> ticket1.compareTo(ticket) > 0);
-    }
+//    /**
+//     * УДаление всех элементов коллекции больших заднного
+//     */
+//    public void removeGreater(Ticket ticket) {
+//
+//        //myTreeSet.removeAll(myTreeSet.tailSet(ticket, true));
+//        myTreeSet.removeIf(ticket1 -> ticket1.compareTo(ticket) > 0);
+//    }
 
 
     /**
      * Проверка является ли билет минимальным в коллекции
      */
     public boolean isMin(Ticket ticket) {
-        if (myTreeSet.isEmpty())
-            return true;
-        return myTreeSet.stream().max(Ticket::compareTo).get().compareTo(ticket) > 0;
+        lock.lock();
+        try {
+            if (myTreeSet.isEmpty())
+                return true;
+            return myTreeSet.stream().max(Ticket::compareTo).get().compareTo(ticket) > 0;
+        } finally {
+            lock.unlock();
+        }
     }
 
 
@@ -114,14 +144,24 @@ public class MyTreeSet {
      * Нахождение суммы полей discount
      */
     public long sumDiscount() {
-        return myTreeSet.stream().mapToLong(Ticket::getDiscount).sum();
+        lock.lock();
+        try{
+            return myTreeSet.stream().mapToLong(Ticket::getDiscount).sum();
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
      * Нахождение билета с максимальным комментарием
      */
     public Ticket maxComment() {
-        return myTreeSet.stream().max(Comparator.comparing(Ticket::getComment)).orElse(null);
+        lock.lock();
+        try{
+            return myTreeSet.stream().max(Comparator.comparing(Ticket::getComment)).orElse(null);
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -139,24 +179,17 @@ public class MyTreeSet {
         return data.toString();
     }
 
-    /**
-     * Сохранение коллекции в файл
-     */
-    public void save(FileWriter fileWriter) throws NullPointerException {
-        try {
-            for (Ticket ticket : myTreeSet) {
-                fileWriter.write(ticket.toCsv() + "\n");
-            }
-        } catch (IOException e) {
-        }
-    }
-
 
     /**
      * Нахождение уникальных полей price
      */
     public Set<Float> uniquePrices() {
-        return myTreeSet.stream().map(Ticket::getPrice).collect(Collectors.toSet());
+        lock.lock();
+        try{
+            return myTreeSet.stream().map(Ticket::getPrice).collect(Collectors.toSet());
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -171,7 +204,12 @@ public class MyTreeSet {
      * Нахождение размера коллекции
      */
     public int size() {
-        return myTreeSet.size();
+        lock.lock();
+        try{
+            return myTreeSet.size();
+        } finally {
+            lock.unlock();
+        }
     }
 
     public void addAll(Set<Ticket> tickets) {

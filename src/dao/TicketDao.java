@@ -27,7 +27,7 @@ public class TicketDao {
             Class.forName("org.postgresql.Driver");
         } catch (ClassNotFoundException e) {
             System.out.println("PostgreSQL JDBC Driver is not found. Include it in your library path ");
-            e.printStackTrace();
+            //e.printStackTrace();
             return;
         }
 
@@ -212,9 +212,6 @@ public class TicketDao {
         return userTickets;
     }
 
-    public Connection getConnection() {
-        return connection;
-    }
 
     private TicketType parseToTicketType(String ticketType) {
         if (ticketType == null)
@@ -252,5 +249,13 @@ public class TicketDao {
             System.out.println("Problem with hashing! Password isn't hashed");
         }
         return sha1;
+    }
+
+    public Connection getConnection() {
+        return connection;
+    }
+
+    public void setConnection(Connection connection) {
+        this.connection = null;
     }
 }
